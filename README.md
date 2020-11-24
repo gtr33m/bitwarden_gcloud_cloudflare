@@ -45,7 +45,7 @@ $ gcloud compute instances create bitwarden-rs \
     --image-family cos-stable \
     --boot-disk-size=30GB \
     --tags cloudflare-webs \
-    --scopes compute-ro
+    --scopes compute-rw
 ```
 
 You may change the zone to be closer to you or customize the name (`bitwarden`), but most of the other values should remain the same. 
