@@ -11,10 +11,8 @@ This is a quick-start guide. Read about this project in more detail [here](https
 ## Features
 
 * Bitwarden self-hosted
-* Automatic https certificate management through Caddy 2 proxy
-* Dynamic DNS updates through ddclient
-* Blocking brute-force attempts with fail2ban
-* Country-wide blocking through iptables and ipset
+* Automatic https certificate management through cloudflare proxy
+* Blocking brute-force attempts with fail2ban(not finished yet)
 
 ## Pre-requisites
 
@@ -30,13 +28,17 @@ Google Cloud offers an '[always free](https://cloud.google.com/free/)' tier of t
 Go to [Google Compute Engine](https://cloud.google.com/compute) and open a Cloud Shell. You may also create the instance manually following [the constraints of the free tier](https://cloud.google.com/free/docs/gcp-free-tier). In the Cloud Shell enter the following command to build the properly spec'd machine: 
 
 ```bash
-$ gcloud compute instances create bitwarden \
+# create firewall rules that only accept connections from cloudflare
+$ gcloud compute firewall-rules create cloudflare-webs --action=ALLOW --rules tcp:80,tcp:8080,tcp:8880,tcp:2052,tcp:2082,tcp:2086,tcp:2095,tcp:443,tcp:2053,tcp:2083,tcp:2087,tcp:2096,tcp:8443,udp:80,udp:8080,udp:8880,udp:2052,udp:2082,udp:2086,udp:2095,udp:443,udp:2053,udp:2083,udp:2087,udp:2096,udp:8443 --source-ranges $(curl https://www.cloudflare.com/ips-v4 | sed -z 's/\n/,/g') --target-tags=cloudflare-webs 
+
+# create vm
+$ gcloud compute instances create bitwarden-rs \
     --machine-type f1-micro \
-    --zone us-central1-a \
+    --zone us-west1-b \
     --image-project cos-cloud \
     --image-family cos-stable \
     --boot-disk-size=30GB \
-    --tags http-server,https-server \
+    --tags cloudflare-webs \
     --scopes compute-ro
 ```
 
@@ -66,22 +68,9 @@ I provide `.env.template` which should be copied to `.env` and filled out; filli
 
 ### Configure `fail2ban` (_optional_)
 
-`fail2ban` stops brute-force attempts at your vault. To configure how long a ban is and how many attempts will trigger a ban, edit `fail2ban/jail.d/jail.local`:
+`fail2ban` need to be integrated with cloudflare API, not finished yet.
+https://guides.wp-bullet.com/integrate-fail2ban-cloudflare-api-v4-guide/
 
-```conf
-bantime = 6h <- how long to enforce the ip ban
-maxretry = 5  <- number of times to retry until a ban occurs
-```
-
-This will work out of the box - no `fail2ban` configuration is needed unless you want e-mail alerts of bans. To enable this, enter the SMTP settings in `.env`, and follow the instructions in `fail2ban/jail.d/jail.local` by uncommenting and entering `destemail` and `sender` and uncommenting the `action_mwl` action in the `bitwarden` and `bitwarden-admin` jails in the same file.
-
-### Configure Country-wide Blocking (_optional_)
-
-The `countryblock` container will block ip addresses from countries specified in `.env` under `COUNTRIES`. China, Hong Kong, and Australia (CN, HK, AU) are blocked by default because Google Cloud will charge egress to those countries under the free tier. You may add any country you like to that list, or clear it out entirely if you don't want to block those countries. Be aware, however, you'll probably be charged for any traffic to those countries, even from bots or crawlers. 
-
-This country-wide blocklist will be updated daily at midnight, but you can change the `COUNTRYBLOCK_SCHEDULE` variable in `.env` to suit your needs. 
-
-These block-lists are pulled from <www.ipdeny.com> on each update. 
 
 ### Configure Automatic Rebooting After Updates (_optional_)
 
@@ -96,7 +85,7 @@ From within your compute vm console, type the command `toolbox`. From within `to
 Next, use `gcloud` to add the `reboot-on-update.sh` script to your vm's boot script metadata with the `add-metadata` [command](https://cloud.google.com/compute/docs/startupscript#startupscriptrunninginstances):
 
 ```bash
-gcloud compute instances add-metadata <instance> --metadata-from-file startup-script=reboot-on-update.sh
+gcloud compute instances add-metadata bitwarden-rs --zone=us-west1-b --metadata-from-file startup-script=reboot-on-update.sh
 ```
 
 You can confirm that your startup script has been added in your instance details under "Custom metadata" on the Compute Engine Console. 
