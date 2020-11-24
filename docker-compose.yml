@@ -12,12 +12,12 @@ services:
     volumes:
     - ${PWD}/bitwarden:/data
     environment:
-    - LOG_FILE=/data/bitwarden.log
+    - LOG_FILE=/dev/stdout
     - WEBSOCKET_ENABLED=true            # required for websockets
     - SHOW_PASSWORD_HINT=false
     - DOMAIN=https://${DOMAIN}          # DOMAIN is set in .env but doesn't have protocol prefix
     - SMTP_FROM_NAME=Bitwarden (${DOMAIN})
-    - IP_HEADER=X-Forwarded-For
+    - IP_HEADER=CF-Connecting-IP
     - ADMIN_TOKEN                       # Value-less variables are set in .env
     - SIGNUPS_ALLOWED
     - SMTP_HOST
@@ -44,84 +44,12 @@ services:
     - 80:80                             # Port 80 is necessary for Let's Encrypt ACME
     - 443:443
     environment:
-    - LOG_FILE=/data/logs/caddy.log
+    - LOG_FILE=/dev/stdout
     - ACME_AGREE=true                   # agree to ACME for auto HTTPS
     - DOMAIN                            # Value-less variables are set in .env
     - EMAIL
-
-
-  ddns:
-    # This provides a ddclient dynamic dns updating cron which is as simple as running it
-    # and editing the ddns/config/ddclient.conf file
-    # https://github.com/linuxserver/docker-ddclient
-    image: linuxserver/ddclient
-    restart: always
-    container_name: ddns
-    volumes:
-    - ${PWD}/ddns:/config
-    environment:
-    - PUID
-    - PGID
-    - TZ
-
-
-  fail2ban:
-    # Implements fail2ban functionality, banning ips that 
-    # try to bruteforce your vault
-    # https://github.com/dani-garcia/bitwarden_rs/wiki/Fail2Ban-Setup
-    # https://github.com/crazy-max/docker-fail2ban
-    image: crazymax/fail2ban:latest
-    restart: always
-    container_name: fail2ban
-    depends_on:
-    - bitwarden
-    volumes:
-    - ${PWD}/fail2ban:/data
-    - ${PWD}/bitwarden:/bitwarden:ro
-    network_mode: "host"
-    privileged: true
-    cap_add:
-    - NET_ADMIN
-    - NET_RAW
-    environment:
-    - F2B_DB_PURGE_AGE=30d
-    - F2B_LOG_TARGET=/data/fail2ban.log
-    - F2B_LOG_LEVEL=INFO
-    - F2B_IPTABLES_CHAIN=INPUT
-    - SSMTP_HOST=${SMTP_HOST}
-    - SSMTP_PORT=${SMTP_PORT}
-    - SSMTP_USER=${SMTP_USERNAME}
-    - SSMTP_PASSWORD=${SMTP_PASSWORD}
-    - SSMTP_HOSTNAME=Bitwarden (${DOMAIN})
-    - SSMTP_TLS=${SMTP_SSL}
-    - SSMTP_STARTTLS=YES
-    - TZ
-
-
-  countryblock:
-    # The block script will block any country (defaults to CN and AU)
-    # Requires cap_add as listed and privileged because it uses iptables and ipset
-    # https://hub.docker.com/_/alpine/
-    image: alpine:latest
-    restart: always
-    container_name: countryblock
-    volumes:
-    - ${PWD}/countryblock/block.sh:/block.sh:ro
-    network_mode: "host"
-    privileged: true
-    cap_add:
-    - NET_ADMIN
-    - NET_RAW
-    environment:
-    - COUNTRIES
-    - COUNTRYBLOCK_SCHEDULE
-    - TZ
-    command: >
-      sh -c 'apk --update --no-cache add ipset iptables ip6tables wget bash tzdata &&
-             ln -sf /proc/1/fd/1 /var/log/block.log &&
-             echo "$COUNTRYBLOCK_SCHEDULE bash /block.sh update" >> /etc/crontabs/root &&
-             crond -d 8 &&
-             bash /block.sh start'    
+    - SLCERTIFICATE=/data/ssl.pem
+    - SSLKEY=/data/ssl.key
 
 
   watchtower:
