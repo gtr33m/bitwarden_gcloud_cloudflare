@@ -33,6 +33,9 @@ $ gcloud compute firewall-rules create cloudflare-webs \
   --allow=tcp:80,tcp:8080,tcp:8880,tcp:2052,tcp:2082,tcp:2086,tcp:2095,tcp:443,tcp:2053,tcp:2083,tcp:2087,tcp:2096,tcp:8443,udp:80,udp:8080,udp:8880,udp:2052,udp:2082,udp:2086,udp:2095,udp:443,udp:2053,udp:2083,udp:2087,udp:2096,udp:8443 \
   --source-ranges $(curl https://www.cloudflare.com/ips-v4 | sed -z 's/\n/,/g') \
   --target-tags=cloudflare-webs 
+  
+# update firewall-rules with latest cloudflare ip
+$ gcloud compute firewall-rules update cloudflare-webs --source-ranges $(curl https://www.cloudflare.com/ips-v4 | sed -z 's/\n/,/g')
 
 # create vm
 $ gcloud compute instances create bitwarden-rs \
