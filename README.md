@@ -13,7 +13,7 @@ This is a quick-start guide. Read about this project in more detail [here](https
 * Bitwarden self-hosted
 * Automatic https certificate management through cloudflare proxy
 * Blocking brute-force attempts with fail2ban(not finished yet)
-
+* Automatic backup your files to google drive periodicity(not finished yet).
 ## Pre-requisites
 
 Before you start, ensure you have the following:
@@ -69,9 +69,10 @@ docker-compose version 1.25.5, build 8a1c60f
 
 I provide `.env.template` which should be copied to `.env` and filled out; filling it out is self-explanitory and requires certain values such as a domain name, Cloudflare API tokens, etc. 
 
-### Configure `fail2ban` (_optional_)
+### Configure `fail2ban` (_Not finished yet_)
 
-`fail2ban` need to be integrated with cloudflare API, not finished yet.
+`fail2ban` need to be integrated with cloudflare API.
+
 https://guides.wp-bullet.com/integrate-fail2ban-cloudflare-api-v4-guide/
 
 
