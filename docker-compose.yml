@@ -26,31 +26,42 @@ services:
     - SMTP_SSL
     - SMTP_USERNAME
     - SMTP_PASSWORD
-    
 
   proxy:
-    # Caddy provides an automatic HTTPS reverse proxy with Let's Encrypt cert provisioning
-    # https://caddyserver.com/
-    image: caddy/caddy:alpine
+    image: nginx
     restart: always
     container_name: proxy
     depends_on:
     - bitwarden
     volumes:
-    - ${PWD}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-    - ${PWD}/caddy/data:/data
-    - caddycerts:/root/.caddy
-    ports:
-    - 80:80                             # Port 80 is necessary for Let's Encrypt ACME
-    - 443:443
-    environment:
-    - LOG_FILE=/dev/stdout
-    - ACME_AGREE=true                   # agree to ACME for auto HTTPS
-    - DOMAIN                            # Value-less variables are set in .env
-    - EMAIL
-    - SLCERTIFICATE=/data/ssl.pem
-    - SSLKEY=/data/ssl.key
+    - ${PWD}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ${PWD}/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+  
+  cloudflared:
+    image: cloudflare/cloudflared
+    restart: always
+    user: root
+    entrypoint: cloudflared --no-autoupdate --hostname ${DOMAIN} --url http://proxy:80
+    container_name: cloudflared
+    depends_on:
+    - proxy
+    volumes:
+    - ${PWD}/cloudflared:/etc/cloudflared:ro
 
+  git-sync:
+    image: whojk/git-sync
+    restart: always
+    container_name: git-sync
+    depends_on:
+    - bitwarden
+    volumes:
+    - ${PWD}/bitwarden:/git_sync_dir
+    environment:
+    - GIT_SSH_KEY
+    - GIT_EMAIL
+    - GIT_NAME
+    - GIT_REPO_URL
+    - GIT_SYNC_INTERVAL
 
   watchtower:
     # Watchtower will pull down your new image, gracefully shut down your existing container 
@@ -65,7 +76,3 @@ services:
     - WATCHTOWER_CLEANUP=true
     - WATCHTOWER_SCHEDULE
     - TZ
-
-
-volumes:
-  caddycerts:

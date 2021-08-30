@@ -11,40 +11,33 @@ This is a quick-start guide. Read about this project in more detail [here](https
 ## Features
 
 * Bitwarden self-hosted
+* Automatic backup databases to your github private repo.
 * Automatic https certificate management through cloudflare proxy
-* Blocking brute-force attempts with fail2ban(not finished yet)
-* Automatic backup your files to google drive periodicity(not finished yet).
+* With Cloudflare Argo Tunnel, **You don't need to expose ANY port al all**.
+* So, DDNS no longer required.
+
 ## Pre-requisites
 
 Before you start, ensure you have the following:
 
 1. A Google Cloud account
-2. A Cloudflare-managed DNS site with an A record ready for Bitwarden
+2. A Cloudflare-managed DNS record ready for Bitwarden.
+3. A github account
 
-## Step 1: Set up Google Cloud `f1-micro` Compute Engine Instance
+## Step 1: Set up Google Cloud `e2-micro` Compute Engine Instance
 
-Google Cloud offers an '[always free](https://cloud.google.com/free/)' tier of their Compute Engine with one virtual core and ~600 MB of RAM (about 150 MB free depending on which OS you installed). [Bitwarden RS](https://github.com/dani-garcia/bitwarden_rs) runs well under these constraints; it's written in Rust and an ideal candidate for a micro instance. 
+Google Cloud offers an '[always free](https://cloud.google.com/free/)' tier of their Compute Engine with one virtual core and ~1000 MB of RAM (about 150 MB free depending on which OS you installed). [Bitwarden RS](https://github.com/dani-garcia/bitwarden_rs) runs well under these constraints; it's written in Rust and an ideal candidate for a micro instance. 
 
 Go to [Google Compute Engine](https://cloud.google.com/compute) and open a Cloud Shell. You may also create the instance manually following [the constraints of the free tier](https://cloud.google.com/free/docs/gcp-free-tier). In the Cloud Shell enter the following command to build the properly spec'd machine: 
 
 ```bash
-# create firewall rules that only accept connections from cloudflare
-$ gcloud compute firewall-rules create cloudflare-webs \
-  --allow=tcp:80,tcp:8080,tcp:8880,tcp:2052,tcp:2082,tcp:2086,tcp:2095,tcp:443,tcp:2053,tcp:2083,tcp:2087,tcp:2096,tcp:8443,udp:80,udp:8080,udp:8880,udp:2052,udp:2082,udp:2086,udp:2095,udp:443,udp:2053,udp:2083,udp:2087,udp:2096,udp:8443 \
-  --source-ranges $(curl https://www.cloudflare.com/ips-v4 | sed -z 's/\n/,/g') \
-  --target-tags=cloudflare-webs 
-  
-# update firewall-rules with latest cloudflare ip
-$ gcloud compute firewall-rules update cloudflare-webs --source-ranges $(curl https://www.cloudflare.com/ips-v4 | sed -z 's/\n/,/g')
-
 # create vm
 $ gcloud compute instances create bitwarden-rs \
-    --machine-type f1-micro \
+    --machine-type e2-micro \
     --zone us-west1-b \
     --image-project cos-cloud \
     --image-family cos-stable \
     --boot-disk-size=30GB \
-    --tags cloudflare-webs \
     --scopes compute-rw
 ```
 
@@ -55,8 +48,8 @@ You may change the zone to be closer to you or customize the name (`bitwarden`),
 Enter a shell on the new instance and clone this repo:
 
 ```bash
-$ git clone https://github.com/dadatuputi/bitwarden_gcloud.git
-$ cd bitwarden_gcloud
+$ git clone https://github.com/HuJK/bitwarden_gcloud_cloudflare
+$ cd bitwarden_gcloud_cloudflare
 ```
 
 Set up the docker-compose alias by using the included script:
@@ -68,18 +61,25 @@ $ docker-compose --version
 docker-compose version 1.25.5, build 8a1c60f
 ```
 
-### Configure Environmental Variables with `.env`
+### Step 2.1: Configure Environmental Variables with `.env`
 
-I provide `.env.template` which should be copied to `.env` and filled out; filling it out is self-explanitory and requires certain values such as a domain name, Cloudflare API tokens, etc. 
+I provide `.env.template` which should be copied to `.env` and filled out; filling it out is self-explanitory and requires certain values such as a domain name, github keys, etc. 
 
-### Configure `fail2ban` (_Not finished yet_)
+### Step 2.2: Setup backups
 
-`fail2ban` need to be integrated with cloudflare API.
+1. Create a empty private repo at your github account.
+2. Generate a new SSH key pair and fill it to `.env` file
+2. Setup your SSH key to the deploy keys to your repo, write access is required.
 
-https://guides.wp-bullet.com/integrate-fail2ban-cloudflare-api-v4-guide/
+### Step 2.3: Setup Cloudflare argo tunnel
 
+1. Download and install Cloudflare argo tunnrl from here: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
+2. Run `cloudflared tunnel login` locally and select your domain to get the cert.
+3. Copy `~/.cloudflared/cert.pem` to the cloudflared folder in this repo.
+4. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
+   Cloudflared will create it later. If it exists, it fails.
 
-### Configure Automatic Rebooting After Updates (_optional_)
+## Configure Automatic Rebooting After Updates (_optional_)
 
 Container-Optimized OS will automatically update itself, but the update will only be applied after a reboot. In order to ensure that you are using the most current operating system software, you can set a boot script that waits until an update has been applied to schedule a reboot.
 
