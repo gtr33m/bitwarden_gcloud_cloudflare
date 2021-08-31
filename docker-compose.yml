@@ -6,7 +6,7 @@ services:
     # Standard Bitwarden is very resource-heavy and cannot run on micro cloud instances
     # Bitwarden Rust is a Rust (mostly) feature-complete implementation of Bitwarden
     # https://github.com/dani-garcia/bitwarden_rs
-    image: bitwardenrs/server:alpine
+    image: vaultwarden/server:alpine
     restart: always
     container_name: bitwarden
     volumes:
@@ -26,6 +26,10 @@ services:
     - SMTP_SSL
     - SMTP_USERNAME
     - SMTP_PASSWORD
+    - YUBICO_CLIENT_ID
+    - YUBICO_SECRET_KEY
+    - YUBICO_SERVER
+    - ORG_CREATE_USER
 
   proxy:
     image: nginx
