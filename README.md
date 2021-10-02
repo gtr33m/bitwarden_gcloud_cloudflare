@@ -75,8 +75,10 @@ I provide `.env.template` which should be copied to `.env` and filled out; filli
 
 1. Download and install Cloudflare argo tunnrl from here: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
 2. Run `cloudflared tunnel login` locally and select your domain to get the cert.
-3. Copy `~/.cloudflared/cert.pem` to the cloudflared folder in this repo.
-4. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
+3. Run `cloudflared tunnel create bwd`
+4. Run `cloudflared tunnel route dns bwd bed.example.com`
+5. Copy `~/.cloudflared/XXXXXXX.json` to the cloudflared folder in this repo.
+6. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
    Cloudflared will create it later. If it exists, it fails.
 
 ## Configure Automatic Rebooting After Updates (_optional_)
