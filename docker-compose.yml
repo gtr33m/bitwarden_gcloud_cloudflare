@@ -45,12 +45,14 @@ services:
     image: cloudflare/cloudflared
     restart: always
     user: root
-    entrypoint: cloudflared --no-autoupdate --hostname ${DOMAIN} --url http://proxy:80
+    entrypoint: cloudflared --credentials-file /etc/cloudflared/tunnel.json --url http://proxy:80 tunnel run $CLOUDFLARED_TUNNEL_NAME
     container_name: cloudflared
     depends_on:
     - proxy
     volumes:
     - ${PWD}/cloudflared:/etc/cloudflared:ro
+    environment:
+    - CLOUDFLARED_TUNNEL_NAME
 
   git-sync:
     image: whojk/git-sync
