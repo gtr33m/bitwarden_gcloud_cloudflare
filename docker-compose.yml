@@ -42,7 +42,7 @@ services:
     - ${PWD}/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
   
   cloudflared:
-    image: cloudflare/cloudflared
+    image: cloudflare/cloudflared:2021.9.2-amd64
     restart: always
     user: root
     entrypoint: cloudflared --credentials-file /etc/cloudflared/tunnel.json --url http://proxy:80 tunnel run $CLOUDFLARED_TUNNEL_NAME
