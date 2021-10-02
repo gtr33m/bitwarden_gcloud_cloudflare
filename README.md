@@ -76,7 +76,7 @@ I provide `.env.template` which should be copied to `.env` and filled out; filli
 1. Download and install Cloudflare argo tunnrl from here: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
 2. Run `cloudflared tunnel login` locally and select your domain to get the cert.
 3. Run `cloudflared tunnel create bwd`
-4. Run `cloudflared tunnel route dns bwd bed.example.com`
+4. Run `cloudflared tunnel route dns bwd bwd.example.com`
 5. Copy `~/.cloudflared/XXXXXXX.json` to the cloudflared folder in this repo and rename it to tunnel.json.
 6. Fill `CLOUDFLARED_TUNNEL_NAME` part in the env file
 7. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
