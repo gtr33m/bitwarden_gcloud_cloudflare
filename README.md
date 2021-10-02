@@ -77,8 +77,9 @@ I provide `.env.template` which should be copied to `.env` and filled out; filli
 2. Run `cloudflared tunnel login` locally and select your domain to get the cert.
 3. Run `cloudflared tunnel create bwd`
 4. Run `cloudflared tunnel route dns bwd bed.example.com`
-5. Copy `~/.cloudflared/XXXXXXX.json` to the cloudflared folder in this repo.
-6. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
+5. Copy `~/.cloudflared/XXXXXXX.json` to the cloudflared folder in this repo and rename it to tunnel.json.
+6. Fill `CLOUDFLARED_TUNNEL_NAME` part in the env file
+7. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
    Cloudflared will create it later. If it exists, it fails.
 
 ## Configure Automatic Rebooting After Updates (_optional_)
