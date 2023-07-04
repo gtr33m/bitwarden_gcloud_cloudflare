@@ -1,6 +1,6 @@
 # Bitwarden self-hosted on Google Cloud for Free
 
-Bitwarden installation optimized for Google Cloud's 'always free' f1-micro compute instance
+Bitwarden installation optimized for Google Cloud's 'always free' e2-micro compute instance
 
 > _Note: if you follow these instructions the end product is a self-hosted instance of Bitwarden running in the cloud and will be free **unless** you exceed the 1GB egress per month or have egress to China or Australia. I talk about best practices to help avoid China/AUS egress, but there's a chance you can get charges from that so please keep that in mind._
 
@@ -34,7 +34,7 @@ Go to [Google Compute Engine](https://cloud.google.com/compute) and open a Cloud
 # create vm
 $ gcloud compute instances create bitwarden-rs \
     --machine-type e2-micro \
-    --zone us-west1-b \
+    --zone us-central1-a \
     --image-project cos-cloud \
     --image-family cos-stable \
     --boot-disk-size=30GB \
@@ -48,7 +48,7 @@ You may change the zone to be closer to you or customize the name (`bitwarden`),
 Enter a shell on the new instance and clone this repo:
 
 ```bash
-$ git clone https://github.com/HuJK/bitwarden_gcloud_cloudflare
+$ git clone https://github.com/gtr33m/bitwarden_gcloud_cloudflare
 $ cd bitwarden_gcloud_cloudflare
 ```
 
@@ -73,12 +73,12 @@ I provide `.env.template` which should be copied to `.env` and filled out; filli
 
 ### Step 2.3: Setup Cloudflare argo tunnel
 
-1. Download and install Cloudflare argo tunnrl from here: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
-2. Run `cloudflared tunnel login` locally and select your domain to get the cert.
-3. Run `cloudflared tunnel create bwd`
-4. Run `cloudflared tunnel route dns bwd bwd.example.com`
-5. Copy `~/.cloudflared/XXXXXXX.json` to the cloudflared folder in this repo and rename it to tunnel.json.
-6. Fill `CLOUDFLARED_TUNNEL_NAME` part in the env file
+1. Make sure you have a correctly registered domain with Cloudflare and DNS setup
+2. 
+3. 
+4.
+5. 
+6. 
 7. Make sure your desired domain for bitwarden are **not** exist in your Cloudflare DNS panel.  
    Cloudflared will create it later. If it exists, it fails.
 
@@ -90,12 +90,12 @@ Before you start, ensure you have `compute-rw` scope for your bitwarden compute 
 
 Modify the script to set your local timezone and the time to schedule reboots: set the `TZ=` and `TIME=` variables in `utilities/reboot-on-update.sh`. By default the script will schedule reboots for 06:00 UTC. 
 
-From within your compute vm console, type the command `toolbox`. From within `toolbox`, find the `utilities` folder within `bitwarden_gcloud`. `toolbox` mounts the host filesystem under `/media/root`, so go there to find the folder. It will likely be in `/media/root/home/<google account name>/bitwarden_gcloud/utilities` - `cd` to that folder.
+From within your compute vm console, type the command `/usr/bin/toolbox`. From within `toolbox`, find the `utilities` folder within `bitwarden_gcloud_cloudflare`. `toolbox` mounts the host filesystem under `/media/root`, so go there to find the folder. It will likely be in `/media/root/home/<google account name>/bitwarden_gcloud_cloudflare/utilities` - `cd` to that folder.
 
 Next, use `gcloud` to add the `reboot-on-update.sh` script to your vm's boot script metadata with the `add-metadata` [command](https://cloud.google.com/compute/docs/startupscript#startupscriptrunninginstances):
 
 ```bash
-gcloud compute instances add-metadata bitwarden-rs --zone=us-west1-b --metadata-from-file startup-script=reboot-on-update.sh
+gcloud compute instances add-metadata bitwarden --zone=us-central1-a --metadata-from-file startup-script=reboot-on-update.sh
 ```
 
 You can confirm that your startup script has been added in your instance details under "Custom metadata" on the Compute Engine Console. 
